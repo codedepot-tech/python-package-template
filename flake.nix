@@ -4,10 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    poetry2nix = "github:nix-community/poetry2nix";
   };
 
-  outputs = inputs @ { nixpkgs, flake-utils, poetry2nix, self }:
+  outputs = inputs @ { nixpkgs, flake-utils, self }:
     flake-utils.lib.eachDefaultSystem (system: 
       let
         # pkgs = import nixpkgs { inherit system; overlays = [
@@ -23,7 +22,7 @@
         #     };
         #   })
         # ]; };
-        pkgs = import nixpkgs;
+        pkgs = import nixpkgs { inherit system; };
         # pybit = pkgs.python3Packages.buildPythonPackage {
         #   pname = "pybit";
         #   version = "1.2.0";
@@ -37,17 +36,22 @@
         #     license = licenses.mit;
         #   };
         # };
-        poetry2nix-env = poetry2nix.mkPoetryEnv {
-          projectDir = ./.;
-          editablePackageSources = {
-            {{cookiecutter.project_name}} = ./.;
-          };
-        };
+        # poetry2nix-env = pkgs.poetry2nix.mkPoetryEnv {
+        #   python = pkgs.python38;
+        #   projectDir = ./.;
+        #   editablePackageSources = {
+        #     python-package-template = ./.;
+        #   };
+        # };
       in {
 
-        devShell = poetry2nix-env.env;
-
+        devShell = pkgs.mkShell {
+          buildInputs = [ pkgs.cookiecutter ];
+          shellHook = ''
+            export PS1="% ";
+          '';
         };
-      }
+
+        }
     );
 }
